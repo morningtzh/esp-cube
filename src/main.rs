@@ -30,7 +30,11 @@ use embedded_graphics::image::*;
 use embedded_graphics::pixelcolor::Rgb565;
 use embedded_graphics::prelude::*;
 
-// use mipidsi::{Builder, Orientation};
+mod device;
+use crate::device::imu::ImuTrait;
+use crate::device::touchpad::TouchPad;
+use device::imu;
+use device::touchpad;
 
 fn main() -> anyhow::Result<()> {
     let peripherals = Peripherals::take()?;
@@ -79,6 +83,8 @@ fn main() -> anyhow::Result<()> {
         }
     };
 
+    display.display_mode(mode)
+
     log::info!("Clear ILI9341");
     display.clear_screen(0x5555).expect("ok");
 
@@ -86,18 +92,45 @@ fn main() -> anyhow::Result<()> {
     backlight.set_high()?;
 
     let raw_image_data = ImageRawLE::new(include_bytes!("../ferris.raw"), 86);
-    let ferris = Image::new(&raw_image_data, Point::new(0, 0));
-
-    // draw image on black background
-    ferris.draw(&mut display).unwrap();
 
     println!("Image printed!");
 
+    let mut touchpad = TouchPad::new();
+
     
 
+    // let mut imu_driver = imu::Mpu6886Driver::new();
+
     loop {
+        println!("imu loop");
+
         thread::sleep(Duration::from_millis(1000));
 
+        // println!("Imu: {:?}", imu_driver.get_data());
 
+        let t = touchpad.get_touch_event();
+        println!("Touch: {:?}", t);
+
+        match t.p1 {
+            Some(p) => {
+                display.clear_screen(0x5555).expect("ok");
+
+                let ferris = Image::new(&raw_image_data, Point::new(p.y as i32, p.x as i32));
+
+                // draw image on black background
+                ferris.draw(&mut display).unwrap();
+            }
+            _ => {}
+        };
+
+        match t.p2 {
+            Some(p) => {
+                let ferris = Image::new(&raw_image_data, Point::new(p.y as i32, p.x as i32));
+
+                // draw image on black background
+                ferris.draw(&mut display).unwrap();
+            }
+            _ => {}
+        };
     }
 }
