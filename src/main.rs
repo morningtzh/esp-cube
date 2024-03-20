@@ -24,17 +24,28 @@ use esp_idf_hal::spi::*;
 use esp_idf_hal::units::FromValueType;
 
 use display_interface_spi::SPIInterface;
-use ili9341::{Ili9341, Orientation};
+use ili9341::{Ili9341, Orientation, DisplaySize};
 
 use embedded_graphics::image::*;
 use embedded_graphics::pixelcolor::Rgb565;
 use embedded_graphics::prelude::*;
+
+use embedded_graphics::{
+   primitives::Rectangle, primitives::PrimitiveStyleBuilder,
+};
 
 mod device;
 use crate::device::imu::ImuTrait;
 use crate::device::touchpad::TouchPad;
 use device::imu;
 use device::touchpad;
+
+pub struct DisplaySize320x240;
+
+impl DisplaySize for DisplaySize320x240 {
+    const WIDTH: usize = 320;
+    const HEIGHT: usize = 240;
+}
 
 fn main() -> anyhow::Result<()> {
     let peripherals = Peripherals::take()?;
@@ -74,7 +85,7 @@ fn main() -> anyhow::Result<()> {
         rst,
         &mut Ets,
         Orientation::Landscape,
-        ili9341::DisplaySize320x480,
+        DisplaySize320x240,
     ) {
         Ok(d) => d,
         Err(err) => {
@@ -83,21 +94,36 @@ fn main() -> anyhow::Result<()> {
         }
     };
 
-    display.display_mode(mode)
-
     log::info!("Clear ILI9341");
     display.clear_screen(0x5555).expect("ok");
 
     // turn on the backlight
     backlight.set_high()?;
 
+
+// Rectangle with red 3 pixel wide stroke and green fill from (50, 20) to (60, 35)
+let style = PrimitiveStyleBuilder::new()
+    .stroke_color(Rgb565::RED)
+    .stroke_width(1)
+    .fill_color(Rgb565::GREEN)
+    .build();
+
+Rectangle::new(Point::new(1, 1), Size::new(238,318))
+    .into_styled(style)
+    .draw(&mut display).expect("msg");
+
+// // Rectangle with translation applied
+// Rectangle::new(Point::new(50, 20), Point::new(60, 35))
+//     .translate(Point::new(65, 35))
+//     .into_styled(style)
+//     .draw(&mut display)?;
+
+
     let raw_image_data = ImageRawLE::new(include_bytes!("../ferris.raw"), 86);
 
     println!("Image printed!");
 
     let mut touchpad = TouchPad::new();
-
-    
 
     // let mut imu_driver = imu::Mpu6886Driver::new();
 
