@@ -1,5 +1,4 @@
 use esp_idf_hal::{
-    adc::attenuation::NONE,
     i2c::{self, I2cDriver},
 };
 
@@ -50,7 +49,7 @@ impl Mpu6886Driver<'_> {
         let mut mpu = Mpu6886::new(i2c);
         let _ret = mpu.init(&mut Ets);
 
-        Mpu6886Driver { mpu: mpu }
+        Mpu6886Driver { mpu }
     }
 }
 
@@ -81,7 +80,7 @@ impl ImuTrait<f32> for Mpu6886Driver<'_> {
                 ));
             }
             Err(e) => {
-                log::error!("Mpu6886Driver get acc failed: {:?}", e);                
+                log::error!("Mpu6886Driver get acc failed: {:?}", e);
             }
         };
 

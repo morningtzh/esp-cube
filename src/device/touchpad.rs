@@ -1,9 +1,9 @@
 use crate::device::i2c::get_i2c;
-use esp_idf_hal::delay;
-use esp_idf_hal::delay::Delay;
+
+
 use esp_idf_hal::i2c;
 
-use esp_idf_svc::mqtt::client::Event;
+
 use ft6x36;
 
 pub struct TouchPad {
@@ -18,8 +18,6 @@ impl TouchPad {
                 panic!("can't get i2c: {}", err);
             }
         };
-
-        
 
         TouchPad {
             device: ft6x36::Ft6x36::new(i2c, ft6x36::Dimension(320, 240)),
